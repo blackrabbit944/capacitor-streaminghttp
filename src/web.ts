@@ -80,6 +80,7 @@ export class StreamingHttpWeb extends WebPlugin implements StreamingHttpPlugin {
                         console.log('[StreamingHttp plugin]: onMessage:', data, options.hash_id);
                         this.notifyListeners('onMessage', {
                             hash_id: options.hash_id,
+                            data: data,
                         });
                     }
                 },
