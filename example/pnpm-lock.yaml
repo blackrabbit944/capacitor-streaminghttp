@@ -19,7 +19,7 @@ importers:
         version: 7.2.0(@capacitor/core@7.2.0)
       '@capacitor/streaming-http':
         specifier: file:..
-        version: file:..(@capacitor/core@7.2.0)
+        version: capacitor-streaming-http@file:..(@capacitor/core@7.2.0)
       '@radix-ui/react-slot':
         specifier: ^1.2.2
         version: 1.2.2(@types/react@19.1.4)(react@19.1.0)
@@ -116,11 +116,6 @@ packages:
 
   '@capacitor/ios@7.2.0':
     resolution: {integrity: sha512-MQgRZcXZpbpjN83bjkGrzQd7s3XeHBZplmWf38/msF/siMGJKLrXNmNzmmPIWA5Xpi/aH6UoJFk1wXuU2U+zMg==}
-    peerDependencies:
-      '@capacitor/core': ^7.2.0
-
-  '@capacitor/streaming-http@file:..':
-    resolution: {directory: .., type: directory}
     peerDependencies:
       '@capacitor/core': ^7.2.0
 
@@ -900,6 +895,11 @@ packages:
 
   caniuse-lite@1.0.30001718:
     resolution: {integrity: sha512-AflseV1ahcSunK53NfEs9gFWgOEmzr0f+kaMFA4xiLZlr9Hzt7HxcSpIFcnNCUkz6R6dWKa54rUz3HUmI3nVcw==}
+
+  capacitor-streaming-http@file:..:
+    resolution: {directory: .., type: directory}
+    peerDependencies:
+      '@capacitor/core': ^7.2.0
 
   ccount@2.0.1:
     resolution: {integrity: sha512-eyrF0jiFpY+3drT6383f1qhkbGsLSifNAjA61IUjZjmLCWjItY6LB9ft9YhoDgwfmclB2zhu51Lc7+95b8NRAg==}
@@ -2509,11 +2509,6 @@ snapshots:
     dependencies:
       '@capacitor/core': 7.2.0
 
-  '@capacitor/streaming-http@file:..(@capacitor/core@7.2.0)':
-    dependencies:
-      '@capacitor/core': 7.2.0
-      '@microsoft/fetch-event-source': 2.0.1
-
   '@emnapi/core@1.4.3':
     dependencies:
       '@emnapi/wasi-threads': 1.0.2
@@ -3275,6 +3270,11 @@ snapshots:
   callsites@3.1.0: {}
 
   caniuse-lite@1.0.30001718: {}
+
+  capacitor-streaming-http@file:..(@capacitor/core@7.2.0):
+    dependencies:
+      '@capacitor/core': 7.2.0
+      '@microsoft/fetch-event-source': 2.0.1
 
   ccount@2.0.1: {}
 

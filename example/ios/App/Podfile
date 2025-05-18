@@ -12,7 +12,7 @@ def capacitor_pods
   pod 'Capacitor', :path => '../../node_modules/.pnpm/@capacitor+ios@7.2.0_@capacitor+core@7.2.0/node_modules/@capacitor/ios'
   pod 'CapacitorCordova', :path => '../../node_modules/.pnpm/@capacitor+ios@7.2.0_@capacitor+core@7.2.0/node_modules/@capacitor/ios'
   pod 'CapacitorApp', :path => '../../node_modules/.pnpm/@capacitor+app@7.0.1_@capacitor+core@7.2.0/node_modules/@capacitor/app'
-  pod 'CapacitorStreamingHttp', :path => '../../node_modules/.pnpm/@capacitor+streaming-http@file+.._@capacitor+core@7.2.0/node_modules/@capacitor/streaming-http'
+  pod 'CapacitorStreamingHttp', :path => '../../node_modules/.pnpm/capacitor-streaming-http@file+.._@capacitor+core@7.2.0/node_modules/capacitor-streaming-http'
 end
 
 target 'App' do

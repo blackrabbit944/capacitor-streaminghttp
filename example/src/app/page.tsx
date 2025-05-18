@@ -4,34 +4,45 @@ import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { StreamingClass } from '@/lib/streaming';
 import ReactMarkdown from 'react-markdown';
+import { useRef, useEffect } from 'react';
 
 export default function Home() {
     const [inputValue, setInputValue] = useState<string>('你好!');
     const [result, setResult] = useState<string>('');
     const [status, setStatus] = useState<'init' | 'loading' | 'success' | 'error'>('init');
 
+    const streamingApiRef = useRef<StreamingClass | null>(null);
+
+    const listeners = {
+        onOpen: () => {
+            setStatus('loading');
+            setResult('');
+        },
+        onMessage: (data) => {
+            console.log('收到消息:', data, typeof data);
+            const jsoned = JSON.parse(data);
+            setResult((prev) => prev + jsoned.content);
+        },
+        onComplete: () => {
+            setStatus('success');
+        },
+        onError: () => {
+            setStatus('error');
+        },
+        onClose: () => {
+            setStatus('init');
+        },
+    };
+
+    useEffect(() => {
+        if (!streamingApiRef.current) {
+            streamingApiRef.current = StreamingClass.getInstance(listeners);
+        } else {
+        }
+    }, []);
+
     const handleSendData = async () => {
-        const streaming = new StreamingClass({
-            onOpen: () => {
-                setStatus('loading');
-                setResult('');
-            },
-            onMessage: (data) => {
-                console.log('收到消息:', data, typeof data);
-                const jsoned = JSON.parse(data);
-                setResult((prev) => prev + jsoned.content);
-            },
-            onComplete: () => {
-                setStatus('success');
-            },
-            onError: () => {
-                setStatus('error');
-            },
-            onClose: () => {
-                setStatus('init');
-            },
-        });
-        await streaming.sendMessage(inputValue);
+        await streamingApiRef.current?.sendMessage(inputValue);
     };
 
     return (

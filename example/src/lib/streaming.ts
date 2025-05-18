@@ -14,11 +14,23 @@ export class StreamingClass {
     private streamingHttp: StreamingHttpPlugin | null;
     private isAddedListeners: boolean = false;
     private responseMap: Map<string, string> = new Map();
+    private static instance: StreamingClass;
 
-    public constructor(listeners: StreamingListeners) {
+    private constructor(listeners: StreamingListeners) {
         this.jwtToken =
             'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MjIsInJvbGUiOnsiaWQiOjIsIm5hbWUiOiJVc2VyIiwiX19lbnRpdHkiOiJSb2xlIn0sImFwcF9uYW1lIjoiZmxhc2giLCJzZXNzaW9uSWQiOjEwOCwiaWF0IjoxNzQ3NDk4NTcxLCJleHAiOjE3NDgxMDMzNzF9.2IJ7bJhoyv8vPpu6cfCjmPQRz7DjLRe9C6fSYrAhgC4';
         this.streamingHttp = StreamingHttp;
+        this.initializeListeners(listeners);
+    }
+
+    public static getInstance(listeners: StreamingListeners) {
+        if (!this.instance) {
+            this.instance = new StreamingClass(listeners);
+        }
+        return this.instance;
+    }
+
+    public updateListeners(listeners: StreamingListeners) {
         this.initializeListeners(listeners);
     }
 
