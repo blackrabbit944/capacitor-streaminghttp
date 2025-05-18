@@ -15,7 +15,7 @@ npx cap sync
 
 * [`request(...)`](#request)
 * [`close(...)`](#close)
-* [`addListener(keyof StreamingHttpListeners, ...)`](#addlistenerkeyof-streaminghttplisteners-)
+* [`addListener(string, ...)`](#addlistenerstring-)
 * [`removeAllListeners()`](#removealllisteners)
 * [Interfaces](#interfaces)
 
@@ -45,32 +45,32 @@ request(options: { url: string; method?: string | undefined; headers?: { [key: s
 ### close(...)
 
 ```typescript
-close(hash_id?: string | undefined) => Promise<void>
+close(options: { hash_id?: string; }) => Promise<void>
 ```
 
 关闭指定的HTTP流式连接
 
-| Param         | Type                | Description              |
-| ------------- | ------------------- | ------------------------ |
-| **`hash_id`** | <code>string</code> | 要关闭的连接的哈希ID，如果未提供则关闭所有连接 |
+| Param         | Type                               | Description   |
+| ------------- | ---------------------------------- | ------------- |
+| **`options`** | <code>{ hash_id?: string; }</code> | 包含要关闭的连接的哈希ID |
 
 **Since:** 1.0.0
 
 --------------------
 
 
-### addListener(keyof StreamingHttpListeners, ...)
+### addListener(string, ...)
 
 ```typescript
-addListener(eventName: keyof StreamingHttpListeners, callback: StreamingHttpListeners[keyof StreamingHttpListeners]) => Promise<PluginListenerHandle>
+addListener(eventName: string, callback: (data: any) => void) => Promise<PluginListenerHandle>
 ```
 
 添加事件监听器以接收流式传输事件
 
-| Param           | Type                                                                                                                                                                                                                                                                                                     | Description |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| **`eventName`** | <code>keyof <a href="#streaminghttplisteners">StreamingHttpListeners</a></code>                                                                                                                                                                                                                          | 要监听的事件名称    |
-| **`callback`**  | <code>((response: { data: string; hash_id: string; }) =&gt; void) \| ((response: { data: string; hash_id: string; }) =&gt; void) \| ((error: { message: string; hash_id: string; }) =&gt; void) \| ((response: { hash_id: string; }) =&gt; void) \| ((response: { hash_id: string; }) =&gt; void)</code> | 事件回调函数      |
+| Param           | Type                                | Description |
+| --------------- | ----------------------------------- | ----------- |
+| **`eventName`** | <code>string</code>                 | 要监听的事件名称    |
+| **`callback`**  | <code>(data: any) =&gt; void</code> | 事件回调函数      |
 
 **Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
@@ -100,18 +100,5 @@ removeAllListeners() => Promise<void>
 | Prop         | Type                                      |
 | ------------ | ----------------------------------------- |
 | **`remove`** | <code>() =&gt; Promise&lt;void&gt;</code> |
-
-
-#### StreamingHttpListeners
-
-流式HTTP响应的事件监听器接口
-
-| Prop             | Type                                                                   | Description | Since |
-| ---------------- | ---------------------------------------------------------------------- | ----------- | ----- |
-| **`onMessage`**  | <code>(response: { data: string; hash_id: string; }) =&gt; void</code> | 接收流式数据片段时触发 | 1.0.0 |
-| **`onComplete`** | <code>(response: { data: string; hash_id: string; }) =&gt; void</code> | 流式传输完成时触发   | 1.0.0 |
-| **`onError`**    | <code>(error: { message: string; hash_id: string; }) =&gt; void</code> | 发生错误时触发     | 1.0.0 |
-| **`onClose`**    | <code>(response: { hash_id: string; }) =&gt; void</code>               | 连接关闭时触发     | 1.0.0 |
-| **`onOpen`**     | <code>(response: { hash_id: string; }) =&gt; void</code>               | 连接打开时触发     | 1.0.0 |
 
 </docgen-api>

@@ -39,10 +39,10 @@ export interface StreamingHttpPlugin {
     /**
      * 关闭指定的HTTP流式连接
      *
-     * @param hash_id 要关闭的连接的哈希ID，如果未提供则关闭所有连接
+     * @param options 包含要关闭的连接的哈希ID
      * @since 1.0.0
      */
-    close(hash_id?: string): Promise<void>;
+    close(options: { hash_id?: string }): Promise<void>;
 
     /**
      * 添加事件监听器以接收流式传输事件
@@ -51,10 +51,7 @@ export interface StreamingHttpPlugin {
      * @param callback 事件回调函数
      * @since 1.0.0
      */
-    addListener(
-        eventName: keyof StreamingHttpListeners,
-        callback: StreamingHttpListeners[keyof StreamingHttpListeners],
-    ): Promise<PluginListenerHandle>;
+    addListener(eventName: string, callback: (data: any) => void): Promise<PluginListenerHandle>;
 
     /**
      * 移除所有事件监听器

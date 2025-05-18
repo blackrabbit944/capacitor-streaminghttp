@@ -81,7 +81,6 @@ import Capacitor
                         if data == "[DONE]" {
                             NSLog("🔵 StreamingHttp: Received [DONE] signal for hash_id: \(hashId)")
                             notifier.notifyListeners("onComplete", data: [
-                                "data": data,
                                 "hash_id": hashId
                             ])
                             continue
@@ -159,8 +158,8 @@ import Capacitor
     
     @objc public func removeAllListeners() {
         NSLog("🔵 StreamingHttp: Removing all listeners")
-        // activeTasks.forEach { $0.value.cancel() }
-        // activeTasks.removeAll()
+        activeTasks.forEach { $0.value.cancel() }
+        activeTasks.removeAll()
     }
     
     private func printCurlCommand(_ request: URLRequest) {
