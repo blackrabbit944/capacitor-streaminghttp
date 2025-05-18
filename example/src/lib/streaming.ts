@@ -1,145 +1,125 @@
 import { StreamingHttp, StreamingHttpPlugin } from '@capacitor/streaming-http';
+import { PluginListenerHandle } from '@capacitor/core';
 import md5 from 'blueimp-md5';
 
-interface StreamingListeners {
-    onMessage: (data: string) => void;
-    onComplete: (data: string) => void;
-    onError: (message: string) => void;
-    onOpen: (response: { data: string; hash_id: string }) => void;
-    onClose: (response: { hash_id: string }) => void;
+type AnyObject = Record<string, unknown>;
+
+interface StreamingRequestOptions {
+    url: string;
+    method: string;
+    data?: unknown;
+    headers?: Record<string, string>;
+    onOpen?: (response: { hash_id: string }) => void;
+    onMessage?: (data: string, totalText: string) => void;
+    onComplete?: (totalText: string) => void;
+    onError?: (message: string) => void;
+    onClose?: (hash_id: string) => void;
 }
 
-export class StreamingClass {
-    private jwtToken: string;
-    private streamingHttp: StreamingHttpPlugin | null;
-    private isAddedListeners: boolean = false;
-    private responseMap: Map<string, string> = new Map();
-    private static instance: StreamingClass;
+export class StreamingService {
+    private static instance: StreamingService;
+    private streamingHttp: StreamingHttpPlugin;
 
-    private constructor(listeners: StreamingListeners) {
-        this.jwtToken =
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MjIsInJvbGUiOnsiaWQiOjIsIm5hbWUiOiJVc2VyIiwiX19lbnRpdHkiOiJSb2xlIn0sImFwcF9uYW1lIjoiZmxhc2giLCJzZXNzaW9uSWQiOjEwOCwiaWF0IjoxNzQ3NDk4NTcxLCJleHAiOjE3NDgxMDMzNzF9.2IJ7bJhoyv8vPpu6cfCjmPQRz7DjLRe9C6fSYrAhgC4';
+    private constructor() {
         this.streamingHttp = StreamingHttp;
-        this.initializeListeners(listeners);
     }
 
-    public static getInstance(listeners: StreamingListeners) {
+    public static getInstance(): StreamingService {
         if (!this.instance) {
-            this.instance = new StreamingClass(listeners);
+            this.instance = new StreamingService();
         }
         return this.instance;
     }
 
-    public updateListeners(listeners: StreamingListeners) {
-        this.initializeListeners(listeners);
+    // 创建请求特定事件名
+    private eventName(event: string, hashId: string): string {
+        return `request_${hashId}_${event}`;
     }
 
-    public async initializeListeners(listeners: StreamingListeners) {
-        if (!this.streamingHttp) return;
+    public async request(options: StreamingRequestOptions): Promise<{
+        hashId: string;
+        cancel: () => Promise<void>;
+    }> {
+        // 生成唯一请求ID
+        const hashId = md5(JSON.stringify(options.data) + Date.now().toString());
+        const listeners: PluginListenerHandle[] = [];
 
-        if (this.isAddedListeners) {
-            console.log('initializeListeners:已经监听过了');
-            return;
+        // 注册事件监听器
+        const registerListener = async (
+            event: string,
+            callback: (data: AnyObject) => void,
+        ): Promise<PluginListenerHandle> => {
+            const eventName = this.eventName(event, hashId);
+            const handle = await this.streamingHttp.addListener(eventName, callback);
+            listeners.push(handle);
+            console.log('注册事件监听器', handle);
+            return handle;
+        };
+
+        // 处理开始事件
+        if (options.onOpen) {
+            await registerListener('onOpen', (data) => {
+                options.onOpen!(data);
+            });
         }
-        this.isAddedListeners = true;
 
-        console.log('initializeListeners:开始监听');
+        // 处理消息事件
+        if (options.onMessage) {
+            await registerListener('onMessage', (data) => {
+                options.onMessage!(data);
+            });
+        }
 
-        await this.streamingHttp.removeAllListeners();
+        // 处理完成事件
+        if (options.onComplete) {
+            await registerListener('complete', (data) => {
+                options.onComplete!(data);
+            });
+        }
 
-        await this.streamingHttp.addListener(
-            'onOpen',
-            (response: { data: string; hash_id: string }) => {
-                console.log('StreamingApi|onOpen:', response);
-                if (listeners.onOpen) {
-                    listeners.onOpen(response);
-                } else {
-                    console.log('StreamingApi|onOpen:没有监听onOpen');
-                }
-            },
-        );
+        // 处理错误事件
+        if (options.onError) {
+            await registerListener('onError', (data) => {
+                options.onError!(data);
+            });
+        }
 
-        await this.streamingHttp.addListener(
-            'onMessage',
-            (response: { data: string; hash_id: string }) => {
-                console.log('StreamingApi|onMessage:', response);
-                if (listeners.onMessage) {
-                    listeners.onMessage(response.data);
-                } else {
-                    console.log('StreamingApi|onMessage:没有监听onMessage');
-                }
-            },
-        );
+        // 处理关闭事件
+        if (options.onClose) {
+            await registerListener('onClose', (data) => {
+                options.onClose!(data);
+                this.cleanupListeners(listeners);
+            });
+        }
 
-        await this.streamingHttp.addListener(
-            'onComplete',
-            (response: { hash_id: string; data: string }) => {
-                console.log('StreamingApi|onComplete:', response);
-                const { hash_id } = response;
-                const totalText = this.responseMap.get(hash_id) || '';
-                if (listeners.onComplete) {
-                    listeners.onComplete(totalText);
-                } else {
-                    console.log('StreamingApi|onComplete:没有监听onComplete');
-                }
-                this.cleanup(hash_id);
-            },
-        );
-
-        await this.streamingHttp.addListener('onClose', (response: { hash_id: string }) => {
-            console.log('StreamingApi|onClose:', response);
-            if (listeners.onClose) {
-                listeners.onClose(response);
-            } else {
-                console.log('StreamingApi|onClose:没有监听onClose');
-            }
-            this.cleanup(response.hash_id);
+        // 发送请求
+        await this.streamingHttp.request({
+            url: options.url,
+            method: options.method,
+            data: options.data,
+            headers: options.headers,
+            hash_id: hashId,
         });
 
-        await this.streamingHttp.addListener(
-            'onError',
-            (response: { hash_id: string; message: string }) => {
-                console.log('StreamingApi|onError:', response);
-                const { hash_id, message } = response;
-                console.error('StreamingApi|onError:', hash_id, message);
-                if (listeners.onError) {
-                    listeners.onError(message);
-                } else {
-                    console.log('StreamingApi|onError:没有监听onError');
-                }
-                this.cleanup(hash_id);
-            },
-        );
-    }
-
-    private cleanup(hash_id: string) {
-        console.log('StreamingApi|cleanup:', hash_id);
-        this.responseMap.delete(hash_id);
-    }
-
-    private getHeaders() {
+        // 返回请求ID和取消方法
         return {
-            'Content-Type': 'application/json',
-            Authorization: 'Bearer ' + this.jwtToken,
+            hashId,
+            cancel: async () => {
+                await this.streamingHttp.close(hashId);
+                await this.cleanupListeners(listeners);
+            },
         };
     }
 
-    public async sendMessage(message: string) {
-        const headers = this.getHeaders();
-        const hash_id = md5(message);
-        await StreamingHttp.request({
-            url: 'http://localhost:3001/api/v1/ai-proxy/chat',
-            method: 'POST',
-            data: {
-                messages: [
-                    {
-                        role: 'user',
-                        content: message,
-                    },
-                ],
-            },
-            hash_id: hash_id,
-            headers: headers,
-        });
+    // 清理监听器
+    private async cleanupListeners(listeners: PluginListenerHandle[]) {
+        for (const listener of listeners) {
+            await listener.remove();
+        }
+    }
+
+    // 取消所有请求
+    public async cancelAll() {
+        await this.streamingHttp.close({});
     }
 }
